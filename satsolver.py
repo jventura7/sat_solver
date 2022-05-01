@@ -1,7 +1,8 @@
 from fileparser import parse
 from dpll import SATSolver
 
-def printResults(solved):
+def printResults(solved, filename):
+    print('Test case name: ', filename)
     if solved.result is True:
         print('DPLL: Satisfied')
     else:
@@ -19,12 +20,16 @@ def printResults(solved):
         print('Model: N/A')
 
     print('Calls: ', solved.numCalls)
+    print('\n')
 
 def satsolve(file):
     clauses, symbols = parse(file)
     solver = SATSolver(clauses, symbols)
-    printResults(solver)
+    printResults(solver, file)
 
 
-testfile = 'Project5_testcases/c17.txt'
-satsolve(testfile)
+if __name__ == '__main__':
+    testfiles = ['Project5_testcases/c17.txt', 'Project5_testcases/hole6.txt', 'Project5_testcases/testcase1.txt',
+                 'Project5_testcases/testcase-aim-50-1_6-yes1-4.txt', 'Project5_testcases/testcase-quinn.txt']
+    for file in testfiles:
+        satsolve(file)

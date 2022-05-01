@@ -2,15 +2,12 @@ import random
 import matplotlib.pyplot as plt
 from dpll import SATSolver
 
-def generateRandomTests():
-    n = 50
-    k = 3
-    numSentences = 60
+def generateRandomTests(n, k, numSentences):
     sentences = {i: (set(), [j for j in range(1, n + 1)]) for i in range(1, numSentences + 1)}
     allowedValues = list(range(-50, 51))
     allowedValues.remove(0)
     for sentence in sentences:
-        m = random.randint(30, 400)
+        m = random.randint(50, 400)
         for i in range(m):
             sentences[sentence][0].add(tuple(random.sample(allowedValues, k)))
     return sentences
@@ -29,6 +26,6 @@ def solve(tests):
     plt.show()
 
 
-testcases = generateRandomTests()
+testcases = generateRandomTests(50, 3, 80)
 solve(testcases)
 
