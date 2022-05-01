@@ -1,11 +1,53 @@
+"""
+ECE 4524 Project 5
+John Ventura
+5/1/22
+dpll file. This file creates an SAT solver class which runs the dpll function.
+It also contains the helper functions for the dpll algorithm.
+"""
+
 class SATSolver:
+    """
+    Attributes
+    ----------
+    numCalls : int
+        the number of recursive calls made to the dpll function
+    model : dict
+        the propositional symbols model
+    clauses : set
+        the set of cnf clauses
+    symbols : list
+        the list of propositional symbols
+    result : boolean
+        the result of the sentence
+
+    Methods
+    -------
+    DPLL(clauses, symbols, model)
+        performs the dpll algorithm and determines the sentence result
+    """
+
     def __init__(self, clauses, symbols):
+        """
+        :param clauses: a set of clauses in the CNF representation of s
+        :param symbols: a list of propositional symbols in s
+        """
         self.numCalls = 0
         self.model = None
         self.clauses, self.symbols = clauses, symbols
         self.result = self.DPLL(self.clauses, self.symbols, {})
 
     def DPLL(self, clauses, symbols, model):
+        """
+        This is the dpll algorithm. It determines if a valid model exists
+        in order for early termination, if not the pure symbols and unit clauses
+        are found and the function then recursively calls itself.
+
+        :param clauses: a set of clauses in the CNF representation of s
+        :param symbols: a list of propositional symbols in s
+        :param model: a dictionary containing propositional symbols and a boolean assignment
+        :return: a boolean whether the sentence is True or False
+        """
         self.numCalls += 1
         if checkEarlyTerminationTrue(clauses, model):
             self.model = model
@@ -24,15 +66,26 @@ class SATSolver:
             temp.remove(P)
             model[P] = value
             return self.DPLL(clauses, temp, model)
-        copyList = symbols.copy()
-        P = copyList.pop(0)
+        rest = symbols.copy()
+        P = rest.pop(0)
         modelTrue = model.copy()
         modelFalse = model.copy()
         modelTrue[P] = True
         modelFalse[P] = False
-        return self.DPLL(clauses, copyList, modelTrue) or self.DPLL(clauses, copyList, modelFalse)
+        return self.DPLL(clauses, rest, modelTrue) or self.DPLL(clauses, rest, modelFalse)
+
 
 def checkEarlyTerminationTrue(clauses, model):
+    """
+    This function determines if a model exists such that every clause in clauses
+    evaluates to True. This is done by keeping a count and checking to see
+    if the count is equal to the length of clauses after iterating through
+    every clause.
+
+    :param clauses: a set of clauses in the CNF representation of s
+    :param model: a dictionary containing propositional symbols and a boolean assignment
+    :return: whether every clause in clauses is True
+    """
     count = 0
     for clause in clauses:
         if type(clause) is int:
@@ -49,6 +102,16 @@ def checkEarlyTerminationTrue(clauses, model):
     return False
 
 def checkEarlyTerminationFalse(clauses, model):
+    """
+    This function determines if a model exists such that is a clause in clauses
+    that evaluates to False. This is done by keeping a count and checking to see
+    if the count is equal to the length of a clauses after iterating through every
+    literal in the clause.
+
+    :param clauses: a set of clauses in the CNF representation of s
+    :param model: a dictionary containing propositional symbols and a boolean assignment
+    :return: whether there is a clause in clauses that is False
+    """
     for clause in clauses:
         count = 0
         if type(clause) is int:
@@ -63,6 +126,16 @@ def checkEarlyTerminationFalse(clauses, model):
     return False
 
 def findPureSymbol(symbols, clauses, model):
+    """
+    This function determines if there is a pure symbol in the sentence. A pure
+    symbol is a symbol that is strictly negative or strictly positive in every
+    clause in the clauses.
+
+    :param symbols: a list of propositional symbols
+    :param clauses: a set of clauses in the CNF representation of s
+    :param model: a dictionary containing propositional symbols and a boolean assignment
+    :return: a pure propositional symbol and the value assigned to it
+    """
     # 1. remove all clauses which are already true
     newClauses = clauses.copy()
     removed = set()
@@ -99,6 +172,14 @@ def findPureSymbol(symbols, clauses, model):
     return None, None
 
 def findUnitClause(clauses, model):
+    """
+    This function determines if there is a unit clause in clauses. A unit clause
+    is a propositional symbol that is the only symbol left in a clause.
+
+    :param clauses: a set of clauses in the CNF representation of s
+    :param model: a dictionary containing propositional symbols and a boolean assignment
+    :return: a unit propositional symbol and the value assigned to it
+    """
     # 1. Loop through each clause
     for clause in clauses:
         # 2. If clause is just one literal, return it and its value
