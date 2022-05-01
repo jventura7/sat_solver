@@ -1,26 +1,4 @@
-def getClausesAndSymbols(file):
-    symbolsList = []
-    clauses = set()
-    with open(file) as f:
-        line = f.readline()
-        while line:
-            if line[0] == 'c':
-                line = f.readline()
-                continue
-            elif line[0] == 'p':
-                _, _, numSymbols, numClauses = line.split(' ')
-                symbolsList = [i for i in range(1, int(numSymbols) + 1)]
-            else:
-                symbols = line.split(' ')
-                clause = []
-                for symbol in symbols:
-                    if symbol.isnumeric() or symbol.lstrip('-').isnumeric():
-                        if symbol != '0':
-                            clause.append(int(symbol))
-                clauses.add(tuple(clause))
-            line = f.readline()
-
-    return clauses, symbolsList
+from fileparser import parse
 
 def checkEarlyTerminationTrue(clauses, model):
     count = 0
@@ -130,32 +108,33 @@ def findUnitClause(clauses, model):
     return None, None
 
 class SATSolver:
-    def __init__(self, file):
-        self.file = file
+    def __init__(self, clauses, symbols):
         self.numCalls = 0
-        self.clauses, self.symbols = getClausesAndSymbols(file)
+        self.model = None
+        self.clauses, self.symbols = clauses, symbols
         self.result = self.DPLL(self.clauses, self.symbols, {})
 
     def DPLL(self, clauses, symbols, model):
         self.numCalls += 1
-        if checkEarlyTerminationTrue(clauses, model): return True
-        if checkEarlyTerminationFalse(clauses, model): return False
+        if checkEarlyTerminationTrue(clauses, model):
+            self.model = model
+            return True
+        if checkEarlyTerminationFalse(clauses, model):
+            return False
         P, value = findPureSymbol(symbols, clauses, model)
         if P:
             temp = symbols.copy()
-            tempModel = model.copy()
             temp.remove(P)
-            tempModel[P] = value
-            return self.DPLL(clauses, temp, tempModel)
+            model[P] = value
+            return self.DPLL(clauses, temp, model)
         P, value = findUnitClause(clauses, model)
         if P:
             temp = symbols.copy()
-            tempModel = model.copy()
             temp.remove(P)
-            tempModel[P] = value
-            return self.DPLL(clauses, temp, tempModel)
+            model[P] = value
+            return self.DPLL(clauses, temp, model)
         copyList = symbols.copy()
-        P = copyList.pop()
+        P = copyList.pop(0)
         modelTrue = model.copy()
         modelFalse = model.copy()
         modelTrue[P] = True
@@ -163,7 +142,24 @@ class SATSolver:
         return self.DPLL(clauses, copyList, modelTrue) or self.DPLL(clauses, copyList, modelFalse)
 
 
-testfile = 'Project5_testcases/hole6.txt'
-solver = SATSolver(testfile)
-print(solver.symbols, solver.clauses)
-print(solver.result, solver.numCalls)
+testfile = 'Project5_testcases/c17.txt'
+clauses, symbols = parse(testfile)
+solver = SATSolver(clauses, symbols)
+
+if solver.result is True:
+    print('DPLL: Satisfied')
+else:
+    print('DPLL: Not Satisfied')
+
+if solver.model:
+    model = []
+    for val in solver.model:
+        if solver.model[val]:
+            model.append('1')
+        else:
+            model.append('0')
+    print('Model:', ''.join(model))
+else:
+    print('Model: N/A')
+
+print('Calls: ', solver.numCalls)
